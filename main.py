@@ -48,8 +48,5 @@ def main_page():
         sentimental_analysis.sentimental_analysis()
 
 
-    pass
 
 
-if __name__ == "__main__":
-         main_page()

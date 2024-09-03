@@ -389,7 +389,7 @@ elif st.session_state['current_page'] == 'forgot_password':
 
 
 
-elif st.session_state['current_page'] == 'main':
+if st.session_state['current_page'] == 'main':
     from main import main_page
 
     if __name__ == "__main__":
