@@ -123,7 +123,7 @@ def data_preprocessing():
         # Use the spreadsheet function to edit the dataframe
         new_dfs, code = spreadsheet(final_df)
 
-        if st.button("Update", type="primary"):
+        if st.button("Update Tabular Data", key="update_tabular", type="primary"):
             if isinstance(new_dfs, OrderedDict) and len(new_dfs) > 0:
                 current_df = list(new_dfs.values())[0]
                 current_df.to_csv(output_path, index=False)
@@ -132,13 +132,12 @@ def data_preprocessing():
                 st.warning("No changes detected in the dataframe.")
         
      
-
         # Initialize session state
         if 'show_download_options' not in st.session_state:
             st.session_state.show_download_options = False
 
-        # Main download button
-        if st.button("Download", type="primary"):
+        # Main download button for tabular data
+        if st.button("Download Tabular Data", key="download_tabular", type="primary"):
             st.session_state.show_download_options = True
 
         # Show download options if the button has been clicked
@@ -200,8 +199,8 @@ def data_preprocessing():
             # Text area for editing the content
             updated_content = st.text_area("Edit the content below:", file_content, height=300)
 
-            # Update button to save the content
-            if st.button("Update", type="primary"):
+            # Update button to save the content (for non-tabular data)
+            if st.button("Update Text Data", key="update_text", type="primary"):
                 write_file_content(output_path, updated_content)
                 st.success(f"File has been updated and saved to {output_path}")
 
@@ -209,8 +208,8 @@ def data_preprocessing():
             if 'show_download_options' not in st.session_state:
                 st.session_state.show_download_options = False
 
-            # Main download button
-            if st.button("Download", type="primary"):
+            # Main download button for non-tabular data
+            if st.button("Download Text Data", key="download_text", type="primary"):
                 st.session_state.show_download_options = True
 
             # Show download options if the button has been clicked

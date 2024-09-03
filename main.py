@@ -47,6 +47,7 @@ def main_page():
     with tabs[6]:
         sentimental_analysis.sentimental_analysis()
 
-
+if __name__ == "__main__":
+         main_page()
 
 

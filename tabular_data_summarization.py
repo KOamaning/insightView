@@ -307,7 +307,7 @@ def tabular_data_summarization():
     # Display the results
     for item in st.session_state.content:
         if isinstance(item, str):
-            if item.startswith("Question:"):
+            if item.startswith("Goal:"):
                 st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Possible question that could be asked from the data:</h1>', unsafe_allow_html=True)
             elif item.startswith("Visualization:"):
                 st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Visualization:</h1>', unsafe_allow_html=True)
