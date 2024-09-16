@@ -8,12 +8,11 @@ import docx
 from docx import Document
 import tempfile
 import fitz
-from transformers import pipeline
+from transformers import pipeline,AutoTokenizer, AutoModelForSeq2SeqLM
 from textwrap import wrap
 from docx import Document
 import io
 from upload import handle_file_upload
-
 
 # Initialize session state variables
 if 'processed_df' not in st.session_state:
@@ -26,8 +25,7 @@ if 'dfs_tabular' not in st.session_state:
                 st.session_state.dfs_tabular = None
 if 'dfs_non_tabular' not in st.session_state:
                 st.session_state.dfs_non_tabular = None
-
-        # Clear temporary files at the start
+ # Clear temporary files at the start
 def clear_temp_files():
                 temp_dir = tempfile.gettempdir()
                 for filename in os.listdir(temp_dir):
@@ -58,8 +56,36 @@ def read_docx(file):
 
 
 def read_txt(file):
-                file.seek(0)
-                return file.read().decode("utf-8")
+    file.seek(0)
+    return file.read().decode("utf-8")
+
+
+def get_or_download_model(model_name, local_dir):
+    if not os.path.exists(local_dir):
+        print(f"Model not found locally. Downloading {model_name}...")
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        
+        os.makedirs(local_dir, exist_ok=True)
+        model.save_pretrained(local_dir)
+        tokenizer.save_pretrained(local_dir)
+        print(f"Model and tokenizer saved to {local_dir}")
+    else:
+        print(f"Loading model from {local_dir}")
+        model = AutoModelForSeq2SeqLM.from_pretrained(local_dir)
+        tokenizer = AutoTokenizer.from_pretrained(local_dir)
+    
+    return model, tokenizer
+
+
+
+# Usage in your main code
+model_name = "facebook/bart-large-cnn"
+local_dir = "./my_summarization_model"
+model, tokenizer = get_or_download_model(model_name, local_dir)
+
+
+
 
 def text_summarization():
     st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Text data summarization</h1>', unsafe_allow_html=True)
@@ -90,8 +116,7 @@ def text_summarization():
         combined_text = "\n\n--- New Document ---\n\n".join(dfs_non_tabular)
 
         # Initialize the summarization pipeline
-        summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-        
+        summarizer = pipeline("summarization", model=model, tokenizer=tokenizer)
         # Summarize the text, handling large inputs by chunking
         chunk_size = 1024
         chunks = wrap(combined_text, chunk_size)

@@ -10,6 +10,7 @@ import tabular_data_summarization
 
 
 
+
 def main_page():    
 
     st.markdown('<h1 style="margin-top: -0.5rem; margin-bottom: 0;">insightView</h1>', unsafe_allow_html=True)

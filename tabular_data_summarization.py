@@ -24,7 +24,8 @@ from reportlab.lib.utils import ImageReader
 import time
 from dotenv import load_dotenv
 
-
+import numpy as np
+from scipy import stats
     
 # Initialize session state variables
 if 'processed_df' not in st.session_state:
@@ -227,6 +228,7 @@ def convert_to_pdf(content, images):
             y_position = height - 72
     c.save()
     return buffer.getvalue()
+
 def tabular_data_summarization():
     configure()
     st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Tabular Data Summarization</h1>', unsafe_allow_html=True)
@@ -250,6 +252,44 @@ def tabular_data_summarization():
     st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Sample of uploaded data:</h1>', unsafe_allow_html=True)
     st.write(combined_df.head())
 
+
+     # Get descriptive statistics
+    summary = combined_df.describe()
+      
+    def calculate_skewness(combined_df):
+        # Select only numerical columns (integers and floats)
+        numeric_df = combined_df.select_dtypes(include=[np.number])
+        
+        # Calculate skewness for each numerical column
+        skewness_values = numeric_df.apply(lambda x: stats.skew(x.dropna()), axis=0)
+        
+        return skewness_values
+
+    def calculate_kurtosis(combined_df):
+        # Select only numerical columns (integers and floats)
+        numeric_df = combined_df.select_dtypes(include=[np.number])
+        
+        # Calculate kurtosis for each numerical column
+        kurtosis_values = numeric_df.apply(lambda x: stats.kurtosis(x.dropna()), axis=0)
+        
+        return kurtosis_values
+
+    # Calculate skewness and kurtosis for numerical columns
+    skewness = calculate_skewness(combined_df)
+    kurtosis = calculate_kurtosis(combined_df)
+    
+    # Create DataFrames for skewness and kurtosis
+    skewness_df = pd.DataFrame(skewness, columns=['skewness']).T
+    kurtosis_df = pd.DataFrame(kurtosis, columns=['kurtosis']).T
+    
+    # Concatenate the summary, skewness, and kurtosis DataFrames
+    summary_with_skewness_kurtosis = pd.concat([summary, skewness_df, kurtosis_df])
+    
+    # Display the updated summary
+    st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">summary:</h1>', unsafe_allow_html=True)
+    st.write(summary_with_skewness_kurtosis)
+
+   
     # Button to trigger summarization
     if st.button("Run Data Summarization", key="run_summarization", type="primary"):
         # Save combined dataframe to a temporary file

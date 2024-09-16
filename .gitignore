@@ -1,2 +1,4 @@
 .env
 secrets.toml
+my_summarization_model
+nltk_data

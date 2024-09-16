@@ -23,24 +23,62 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 from fpdf import FPDF
 from upload import handle_file_upload
+import nltk
 
-            
+def get_or_download_nltk_resource(resource_name, download_func, local_dir):
+    nltk.data.path.append(local_dir)  # Add the local directory to NLTK's search path
+    
+    try:
+        nltk.data.find(resource_name)
+        print(f"NLTK resource '{resource_name}' found locally.")
+    except LookupError:
+        print(f"NLTK resource '{resource_name}' not found locally. Downloading to {local_dir}...")
+        old_dir = os.getcwd()
+        os.chdir(local_dir)  # Change to the local directory for the download
+        download_func()
+        os.chdir(old_dir)  # Change back to the original directory
+        print(f"NLTK resource '{resource_name}' downloaded successfully to {local_dir}.")
 
+def setup_nltk_resources(local_dir):
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir, exist_ok=True)
+    
+    resources_to_download = [
+        ('tokenizers/punkt', lambda: nltk.download('punkt')),
+        ('sentiment/vader_lexicon', lambda: nltk.download('vader_lexicon')),
+        ('corpora/stopwords', lambda: nltk.download('stopwords'))
+    ]
 
-            # Initialize session state variables
+    for resource_name, download_func in resources_to_download:
+        get_or_download_nltk_resource(resource_name, download_func, local_dir)
+
+# Set up NLTK resources at the beginning of your script
+local_nltk_dir = "./nltk_data"
+setup_nltk_resources(local_nltk_dir)
+
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.probability import FreqDist
+from heapq import nlargest
+import re
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+
+# Initialize session state variables
 if 'processed_df' not in st.session_state:
-                st.session_state.processed_df = None
+    st.session_state.processed_df = None
 if 'data_processed' not in st.session_state:
-                st.session_state.data_processed = False
+    st.session_state.data_processed = False
 if 'uploaded_files' not in st.session_state:
-                st.session_state.uploaded_files = None
+    st.session_state.uploaded_files = None
 if 'dfs_tabular' not in st.session_state:
-                st.session_state.dfs_tabular = None
+    st.session_state.dfs_tabular = None
 if 'dfs_non_tabular' not in st.session_state:
-                st.session_state.dfs_non_tabular = None
+    st.session_state.dfs_non_tabular = None
 
 
-            # Clear temporary files at the start
+# Clear temporary files at the start
 def clear_temp_files():
                 temp_dir = tempfile.gettempdir()
                 for filename in os.listdir(temp_dir):
@@ -76,52 +114,55 @@ def read_txt(file):
 
 
 def sentimental_analysis(): 
-            import streamlit as st
-            st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Sentimental Analysis</h1>', unsafe_allow_html=True)
-            uploaded_files, _, dfs_non_tabular = handle_file_upload(page_name=sentimental_analysis)
+            
+    st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Sentimental Analysis</h1>', unsafe_allow_html=True)
+    uploaded_files, _, dfs_non_tabular = handle_file_upload(page_name=sentimental_analysis)
 
 
-            # Process uploaded files
-            dfs_non_tabular = []
+    # Process uploaded files
+    dfs_non_tabular = []
 
-            if uploaded_files is None or len(uploaded_files) == 0:
+    if uploaded_files is None or len(uploaded_files) == 0:
                 st.warning("Please upload a file that contains text data for sentimental analysis.")
                 return
 
-            for uploaded_file in uploaded_files:
-                file_name = uploaded_file.name
-                file_extension = file_name.split(".")[-1].lower()
+    
+    for uploaded_file in uploaded_files:
+                
+                file_extension = uploaded_file.name.split(".")[-1].lower()
+                
+                st.write(f"**Processing file:** {uploaded_file.name}")
 
-                for file in uploaded_files:
-                    file_extension = file.name.split('.')[-1].lower()
-                    if file_extension not in ["txt", "pdf", "docx"]:
-                        st.warning(f"Unsupported file type for file {file_name}. Please upload a file that contains text data for sentimental analysis. ")
-                    else:
-                        if file_extension == 'pdf':
-                                # Extract text from PDF
-                                text = read_pdf(file)
-                                dfs_non_tabular.append(text)
 
-                        elif file_extension == 'docx':
-                                text = read_docx(file)
-                                dfs_non_tabular.append(text)
+                if file_extension in ["pdf", "docx", "txt"]:
 
-                        elif file_extension == 'txt':
-                                text = read_txt(file)
-                                dfs_non_tabular.append(text)
-                        else:
-                                st.error(f"Unsupported file type for file {uploaded_files.name}. Please upload a TXT, PDF, or DOCX file.")                           
+                    if file_extension == "pdf":
+                        text = read_pdf(uploaded_file)
+                        dfs_non_tabular.append(text)
 
+
+                    elif file_extension == "docx":
+                        text = read_docx(uploaded_file)
+                        dfs_non_tabular.append(text)
+
+
+                    elif file_extension == "txt":
+                        text = read_txt(uploaded_file)
+                        dfs_non_tabular.append(text)
+                        
+
+                else:
+                    st.error(f"Unsupported file type for file {uploaded_file.name}. Please upload a TXT, PDF, or DOCX file.")
 
 
     # Sentiment analysis logic
-            if dfs_non_tabular:
+    if dfs_non_tabular:
                 
                # Combine all text data in dfs_non_tabular
                 combined_text = "\n\n--- New Document ---\n\n".join(dfs_non_tabular)
 
                 # Write the combined text to a file
-                output_path = r"C:\Users\Kwaku\Desktop\project_final\upload_txt.txt"
+                output_path = r"upload_txt.txt"
 
                 
                 # List of encodings to try
@@ -131,48 +172,9 @@ def sentimental_analysis():
                 for encoding in encodings_to_try:
                         with open(output_path, 'w', encoding=encoding, errors='ignore') as f:
                             f.write(combined_text)
-              
+            
 
-
-                def download_nltk_resources():
-                    try:
-                        nltk.data.find('tokenizers/punkt')
-                    except LookupError:
-                        st.warning("The NLTK `punkt` resource is missing. Attempting to download it now...")
-                        nltk.download('punkt', quiet=True)
-
-                    try:
-                        nltk.data.find('vader_lexicon')
-                    except LookupError:
-                        st.warning("The NLTK `vader_lexicon` resource is missing. Attempting to download it now...")
-                        nltk.download('vader_lexicon', quiet=True)
-
-                    try:
-                        nltk.data.find('stopwords')
-                    except LookupError:
-                        st.warning("The NLTK `stopwords` resource is missing. Attempting to download it now...")
-                        nltk.download('stopwords', quiet=True)
-
-                import nltk
-             
-                # Download necessary NLTK resources
-                nltk.download('vader_lexicon')
-                nltk.download('punkt')
-                nltk.download('stopwords')
-
-                from nltk.sentiment.vader import SentimentIntensityAnalyzer
-                from nltk.corpus import stopwords
-                from nltk.tokenize import sent_tokenize, word_tokenize
-                from nltk.probability import FreqDist
-                from heapq import nlargest
-                import re
-                import matplotlib.pyplot as plt
-                import plotly.graph_objects as go
-                import pandas as pd
-                import streamlit as st
-
-
-                # Function definitions
+            # Function definitions
                 def analyze_sentiment_vader(text):
                     analyzer = SentimentIntensityAnalyzer()
                     sentiment = analyzer.polarity_scores(text)
@@ -183,7 +185,6 @@ def sentimental_analysis():
                     highest = max(scores, key=scores.get)
                     return highest, scores[highest]
 
-                
                 def plot_sentiment_distribution(sentiment):
                     labels = ['Negative', 'Neutral', 'Positive']
                     values = [sentiment['neg'], sentiment['neu'], sentiment['pos']]
@@ -191,11 +192,11 @@ def sentimental_analysis():
                     fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
                     fig.update_layout(title='Sentiment Distribution')
                     
-                    return fig  # Return the figure object
+                    return fig 
                     
 
                 # Read the text file
-                with open(r'C:\Users\Kwaku\Desktop\project_final\upload_txt.txt', 'r') as file:
+                with open(r'upload_txt.txt', 'r') as file:
                     text = file.read()
 
                 if text:
@@ -203,8 +204,8 @@ def sentimental_analysis():
                     sentiment = analyze_sentiment_vader(text)
                     highest, score = highest_sentiment(sentiment)
                     st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">Sentimental analysis results:</h1>', unsafe_allow_html=True)
-                    score = score * 10
-                    st.write(f"The text shows a {highest} sentiment with a score of {score}/10")
+                    scores =  round(score, 2)*10
+                    st.write(f"The text shows a {highest} sentiment with a score of {scores}/10")
 
                     # Create and display the sentiment distribution chart
                     fig = plot_sentiment_distribution(sentiment)

@@ -2,7 +2,7 @@ import streamlit as st
 from upload import handle_file_upload
 
 def home():
-        import streamlit as st
+ 
         import pandas as pd
         import numpy as np
         import fitz  # PyMuPDF
@@ -15,7 +15,7 @@ def home():
         from sklearn.linear_model import LinearRegression
         import os
         import tabula
-        import streamlit as st
+      
         from lida import Manager, TextGenerationConfig, llm
         import base64
         from PIL import Image
@@ -23,7 +23,7 @@ def home():
         import os
         from pandasai import SmartDataframe
         from pandasai import Agent
-        import streamlit_shadcn_ui as ui
+ 
         from mitosheet.streamlit.v1 import spreadsheet
         import json
         import cv2
