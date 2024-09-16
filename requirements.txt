@@ -28,3 +28,4 @@ firebase_admin
 streamlit-cookies-manager
 streamlit-lottie
 requests
+nltk
