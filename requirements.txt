@@ -29,3 +29,5 @@ streamlit-cookies-manager
 streamlit-lottie
 requests
 nltk
+torch
+
