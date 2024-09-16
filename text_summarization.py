@@ -13,6 +13,7 @@ from textwrap import wrap
 from docx import Document
 import io
 from upload import handle_file_upload
+import torch
 
 # Initialize session state variables
 if 'processed_df' not in st.session_state:
@@ -59,28 +60,28 @@ def read_txt(file):
     file.seek(0)
     return file.read().decode("utf-8")
 
-
 def get_or_download_model(model_name, local_dir):
     if not os.path.exists(local_dir):
         print(f"Model not found locally. Downloading {model_name}...")
+        # Downloading the model and tokenizer
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        
+
+        # Saving the model and tokenizer locally
         os.makedirs(local_dir, exist_ok=True)
         model.save_pretrained(local_dir)
         tokenizer.save_pretrained(local_dir)
         print(f"Model and tokenizer saved to {local_dir}")
     else:
+        # Loading the model and tokenizer from the local directory
         print(f"Loading model from {local_dir}")
-        model = AutoModelForSeq2SeqLM.from_pretrained(local_dir)
+        model = AutoModelForSeq2SeqLM.from_pretrained(local_dir, torch_dtype=torch.float32)
         tokenizer = AutoTokenizer.from_pretrained(local_dir)
-    
+
     return model, tokenizer
 
-
-
 # Usage in your main code
-model_name = "facebook/bart-large-cnn"
+model_name = "t5-small"
 local_dir = "./my_summarization_model"
 model, tokenizer = get_or_download_model(model_name, local_dir)
 
