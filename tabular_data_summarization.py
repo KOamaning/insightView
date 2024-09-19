@@ -255,39 +255,10 @@ def tabular_data_summarization():
 
      # Get descriptive statistics
     summary = combined_df.describe()
-      
-    def calculate_skewness(combined_df):
-        # Select only numerical columns (integers and floats)
-        numeric_df = combined_df.select_dtypes(include=['float', 'float64'])
-        numeric_df = numeric_df.dropna(axis=1, how='all')
-        # Calculate skewness for each numerical column
-        skewness_values = numeric_df.apply(lambda x: stats.skew(x.dropna()), axis=0)
-        
-        return skewness_values
 
-    def calculate_kurtosis(combined_df):
-        # Select only numerical columns (integers and floats)
-        numeric_df = combined_df.select_dtypes(include=[np.number])
-        
-        # Calculate kurtosis for each numerical column
-        kurtosis_values = numeric_df.apply(lambda x: stats.kurtosis(x.dropna()), axis=0)
-        
-        return kurtosis_values
-
-    # Calculate skewness and kurtosis for numerical columns
-    skewness = calculate_skewness(combined_df)
-    kurtosis = calculate_kurtosis(combined_df)
-    
-    # Create DataFrames for skewness and kurtosis
-    skewness_df = pd.DataFrame(skewness, columns=['skewness']).T
-    kurtosis_df = pd.DataFrame(kurtosis, columns=['kurtosis']).T
-    
-    # Concatenate the summary, skewness, and kurtosis DataFrames
-    summary_with_skewness_kurtosis = pd.concat([summary, skewness_df, kurtosis_df])
-    
     # Display the updated summary
     st.markdown('<h1 style="font-size: 1rem; margin-top: 0;">summary:</h1>', unsafe_allow_html=True)
-    st.write(summary_with_skewness_kurtosis)
+    st.write(summary)
 
    
     # Button to trigger summarization
