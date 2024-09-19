@@ -258,8 +258,8 @@ def tabular_data_summarization():
       
     def calculate_skewness(combined_df):
         # Select only numerical columns (integers and floats)
-        numeric_df = combined_df.select_dtypes(include=[np.number])
-        
+        numeric_df = combined_df.select_dtypes(include=['float', 'float64'])
+        numeric_df = numeric_df.dropna(axis=1, how='all')
         # Calculate skewness for each numerical column
         skewness_values = numeric_df.apply(lambda x: stats.skew(x.dropna()), axis=0)
         
