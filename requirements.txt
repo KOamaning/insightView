@@ -1,5 +1,6 @@
 streamlit
-pandas
+pandas==2.2.2
+streamlit-cookies-manager
 PyMuPDF
 docx
 pillow 
