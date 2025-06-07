@@ -55,11 +55,9 @@ except Exception:
     lottie_video = None
 
 # Cookie manager setup
-cookie_password = os.getenv("cookie_password")
-cookies = EncryptedCookieManager(prefix="insightView", password=cookie_password)
-if not cookies.ready():
-    st.warning("Cookies are not ready yet. Please wait.")
-    st.stop()
+from streamlit_cookies_manager import CookieManager
+cookies = CookieManager(prefix="insightView")
+
 
 # Utilities
 
