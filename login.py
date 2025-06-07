@@ -55,8 +55,14 @@ except Exception:
     lottie_video = None
 
 # Cookie manager setup
+import streamlit as st
 from streamlit_cookies_manager import CookieManager
+
 cookies = CookieManager(prefix="insightView")
+
+if not cookies.ready():
+    st.stop()
+
 
 
 # Utilities
